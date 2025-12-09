@@ -457,25 +457,26 @@ void UCreatureCollectionSubsystem::CallSwitchActiveCreature(APlayerController* P
         }
     }
 
-    // 2. Despawn Old
-    if (bDespawnOld && OldPawn)
-    {
-        OldPawn->Destroy();
-    }
-
-    // 3. Spawn New
+    // 2. Try Spawn New
     AActor* NewActor = nullptr;
     CallSpawnCreatureFromParty(NewPartySlotIndex, SpawnTransform, NewActor);
 
-    // 4. Possess New
     if (NewActor)
     {
+        // 3. Despawn Old ONLY if New Spawn Succeeded
+        if (bDespawnOld && OldPawn)
+        {
+            OldPawn->Destroy();
+        }
+
+        // 4. Possess New
         CallPossessCreature(PlayerController, NewActor);
         ActivePartySlotIndex = NewPartySlotIndex;
         OnPartyUpdated.Broadcast(); // Notify UI of active slot change (if UI highlights it)
     }
     else
     {
-        ActivePartySlotIndex = -1;
+        UE_LOG(LogTemp, Error, TEXT("CallSwitchActiveCreature: Failed to spawn new creature from slot %d. Switch aborted to prevent player void state."), NewPartySlotIndex);
+        // Do NOT destroy old pawn. Player stays in control of current character.
     }
 }
