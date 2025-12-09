@@ -85,6 +85,14 @@ bool UCreatureCollectionSubsystem::CallSwapCreatureFromStorage(FName SpeciesName
 {
     if (PartySlotIndex < 0 || PartySlotIndex >= MaxPartySize) return false;
 
+    // Block swapping the currently possessed creature
+    if (PartySlotIndex == ActivePartySlotIndex && ActivePartySlotIndex != -1)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallSwapCreatureFromStorage: Cannot swap Active Creature (Slot %d). Switch first."), PartySlotIndex);
+        OnSwapFailed.Broadcast("Cannot swap active creature.");
+        return false;
+    }
+
     if (PartySlotIndex == 0 && bLockFirstPartySlot && Party.IsValidIndex(0))
     {
         UE_LOG(LogTemp, Warning, TEXT("CallSwapCreatureFromStorage: Cannot swap into locked Slot 0."));
@@ -132,6 +140,14 @@ bool UCreatureCollectionSubsystem::CallSwapCreatureFromStorage(FName SpeciesName
 bool UCreatureCollectionSubsystem::CallSendToStorage(int32 PartySlotIndex)
 {
     if (!Party.IsValidIndex(PartySlotIndex)) return false;
+
+    // Block storing the currently possessed creature
+    if (PartySlotIndex == ActivePartySlotIndex && ActivePartySlotIndex != -1)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallSendToStorage: Cannot store Active Creature (Slot %d). Switch first."), PartySlotIndex);
+        OnSwapFailed.Broadcast("Cannot store active creature.");
+        return false;
+    }
 
     if (PartySlotIndex == 0 && bLockFirstPartySlot) return false;
 
@@ -339,6 +355,9 @@ void UCreatureCollectionSubsystem::CallLoadCollectionSaveData(const FCreatureCol
 
     TotalCaptureCount = SaveData.TotalCaptureCount;
 
+    // Reset Active Slot on Load (Player needs to re-possess)
+    ActivePartySlotIndex = -1;
+
     // Broadcast updates after load so UI refreshes
     OnPartyUpdated.Broadcast();
 
@@ -440,5 +459,11 @@ void UCreatureCollectionSubsystem::CallSwitchActiveCreature(APlayerController* P
     if (NewActor)
     {
         CallPossessCreature(PlayerController, NewActor);
+        ActivePartySlotIndex = NewPartySlotIndex;
+        OnPartyUpdated.Broadcast(); // Notify UI of active slot change (if UI highlights it)
+    }
+    else
+    {
+        ActivePartySlotIndex = -1;
     }
 }

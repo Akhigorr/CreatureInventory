@@ -9,6 +9,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllPartyDead);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPartyUpdated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStorageUpdated, int32, BoxIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCreatureAdded, const FCreatureInstance&, NewCreature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSwapFailed, FString, Reason);
 
 /**
  * Subsystem to manage the player's creature collection (Party + Storage).
@@ -42,6 +43,10 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
     int32 TotalCaptureCount = 0;
 
+    // Tracks which party slot is currently possessed by the player. -1 if none/unknown.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
+    int32 ActivePartySlotIndex = -1;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
     TArray<FCreatureInstance> Party;
 
@@ -65,6 +70,10 @@ public:
     // Fired when a new creature is successfully caught (Party or Storage)
     UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
     FOnCreatureAdded OnCreatureAdded;
+
+    // Fired when a Swap or Store operation fails (e.g. trying to swap active creature)
+    UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
+    FOnSwapFailed OnSwapFailed;
 
     // --- API ---
 
