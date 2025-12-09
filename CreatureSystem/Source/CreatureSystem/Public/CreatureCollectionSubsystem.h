@@ -174,4 +174,14 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
     void CallPossessCreature(APlayerController* PlayerController, AActor* CreatureActor);
+
+    /**
+     * Handles the full lifecycle of switching creatures:
+     * 1. Saves the Current Creature's state back to the Party (if it implements CreatureVesselInterface).
+     * 2. Despawns (Destroys) the Current Creature (if bDespawnOld is true).
+     * 3. Spawns the New Creature from the Party.
+     * 4. Possesses the New Creature.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
+    void CallSwitchActiveCreature(APlayerController* PlayerController, int32 NewPartySlotIndex, FTransform SpawnTransform, bool bDespawnOld = true);
 };

@@ -401,3 +401,44 @@ void UCreatureCollectionSubsystem::CallPossessCreature(APlayerController* Player
 
     PlayerController->Possess(NewPawn);
 }
+
+void UCreatureCollectionSubsystem::CallSwitchActiveCreature(APlayerController* PlayerController, int32 NewPartySlotIndex, FTransform SpawnTransform, bool bDespawnOld)
+{
+    if (!PlayerController) return;
+
+    // 1. Save Current State
+    APawn* OldPawn = PlayerController->GetPawn();
+    if (OldPawn && OldPawn->Implements<UCreatureVesselInterface>())
+    {
+        FCreatureInstance UpdatedData;
+        ICreatureVesselInterface::Execute_CallGetUpdatedCreatureData(OldPawn, UpdatedData);
+
+        // Find in Party and update
+        // We assume we can match by CaptureIndex (unique ID)
+        for (int32 i = 0; i < Party.Num(); ++i)
+        {
+            if (Party[i].CaptureIndex == UpdatedData.CaptureIndex)
+            {
+                Party[i] = UpdatedData;
+                OnPartyUpdated.Broadcast();
+                break;
+            }
+        }
+    }
+
+    // 2. Despawn Old
+    if (bDespawnOld && OldPawn)
+    {
+        OldPawn->Destroy();
+    }
+
+    // 3. Spawn New
+    AActor* NewActor = nullptr;
+    CallSpawnCreatureFromParty(NewPartySlotIndex, SpawnTransform, NewActor);
+
+    // 4. Possess New
+    if (NewActor)
+    {
+        CallPossessCreature(PlayerController, NewActor);
+    }
+}
