@@ -62,7 +62,7 @@ public:
      * Returns true if successfully added.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    bool AddCreature(FCreatureInstance NewCreature);
+    bool CallAddCreature(FCreatureInstance NewCreature);
 
     /**
      * Swaps a creature from Storage to the Party.
@@ -70,68 +70,68 @@ public:
      * @param PartySlotIndex The index in the Party array to swap into.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    bool SwapCreatureFromStorage(FName SpeciesName, int32 PartySlotIndex);
+    bool CallSwapCreatureFromStorage(FName SpeciesName, int32 PartySlotIndex);
 
     /**
      * Sends a creature from the Party to Storage.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    bool SendToStorage(int32 PartySlotIndex);
+    bool CallSendToStorage(int32 PartySlotIndex);
 
     /**
      * Heals all creatures in the Party.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    void HealAllParty();
+    void CallHealAllParty();
 
     /**
      * Updates a specific creature's state (e.g., after taking damage).
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    void UpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead);
+    void CallUpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead);
 
     /**
      * Checks if all party members are dead.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    bool CheckAllPartyDead() const;
+    bool CallCheckAllPartyDead() const;
 
     /**
      * Helper to get the correct actor class based on level.
      */
     UFUNCTION(BlueprintPure, Category = "Creature Collection")
-    TSubclassOf<AActor> GetCreatureEvolutionClass(const FCreatureInstance& Creature) const;
+    TSubclassOf<AActor> CallGetCreatureEvolutionClass(const FCreatureInstance& Creature) const;
 
     /**
      * Checks if a species is already present in the collection (Party or Storage).
      * Useful for Spawners to decide whether to spawn a pickup.
      */
     UFUNCTION(BlueprintPure, Category = "Creature Collection")
-    bool IsSpeciesCaught(FName SpeciesName) const;
+    bool CallIsSpeciesCaught(FName SpeciesName) const;
 
     /**
      * Returns all creatures currently stored in a specific box.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    TArray<FCreatureInstance> GetCreaturesInBox(int32 BoxIndex) const;
+    TArray<FCreatureInstance> CallGetCreaturesInBox(int32 BoxIndex) const;
 
     /**
      * Returns a sorted list of ALL creatures in Storage (useful for 'All' view).
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
-    TArray<FCreatureInstance> GetAllCreaturesSorted(ECreatureSortMethod Method) const;
+    TArray<FCreatureInstance> CallGetAllCreaturesSorted(ECreatureSortMethod Method) const;
 
     /**
      * Returns a struct containing the current Party and Storage data.
      * Pass this struct to your SaveGame object to save progress.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
-    FCreatureCollectionSaveData GetCollectionSaveData() const;
+    FCreatureCollectionSaveData CallGetCollectionSaveData() const;
 
     /**
      * Overwrites the current Party and Storage with data from the provided struct.
      * Use this when loading from a SaveGame object.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
-    void LoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData);
+    void CallLoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData);
 };

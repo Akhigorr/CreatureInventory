@@ -4,6 +4,8 @@
 #include "Engine/DataAsset.h"
 #include "CreatureDefinition.generated.h"
 
+class AActor;
+
 /**
  * Defines the static data for a Creature Species (e.g., "Katraji").
  */
@@ -31,7 +33,7 @@ public:
      * Iterates to find the highest key <= Level.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Data")
-    TSubclassOf<AActor> GetActorClassForLevel(int32 Level) const
+    TSubclassOf<AActor> CallGetActorClassForLevel(int32 Level) const
     {
         TSubclassOf<AActor> SelectedClass = nullptr;
         int32 HighestFoundLevel = -1;

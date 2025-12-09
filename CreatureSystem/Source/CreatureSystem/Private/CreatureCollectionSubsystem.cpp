@@ -7,19 +7,19 @@ void UCreatureCollectionSubsystem::Initialize(FSubsystemCollectionBase& Collecti
     // Default values are set in header
 }
 
-bool UCreatureCollectionSubsystem::AddCreature(FCreatureInstance NewCreature)
+bool UCreatureCollectionSubsystem::CallAddCreature(FCreatureInstance NewCreature)
 {
     if (!NewCreature.CreatureDefinition)
     {
-        UE_LOG(LogTemp, Warning, TEXT("AddCreature: Invalid Creature Definition."));
+        UE_LOG(LogTemp, Warning, TEXT("CallAddCreature: Invalid Creature Definition."));
         return false;
     }
 
     FName SpeciesName = NewCreature.CreatureDefinition->SpeciesName;
 
-    if (IsSpeciesCaught(SpeciesName))
+    if (CallIsSpeciesCaught(SpeciesName))
     {
-        UE_LOG(LogTemp, Warning, TEXT("AddCreature: Species %s already exists in collection."), *SpeciesName.ToString());
+        UE_LOG(LogTemp, Warning, TEXT("CallAddCreature: Species %s already exists in collection."), *SpeciesName.ToString());
         return false;
     }
 
@@ -31,7 +31,7 @@ bool UCreatureCollectionSubsystem::AddCreature(FCreatureInstance NewCreature)
     if (Party.Num() < MaxPartySize)
     {
         Party.Add(NewCreature);
-        UE_LOG(LogTemp, Log, TEXT("AddCreature: Added %s to Party."), *SpeciesName.ToString());
+        UE_LOG(LogTemp, Log, TEXT("CallAddCreature: Added %s to Party."), *SpeciesName.ToString());
         return true;
     }
 
@@ -64,21 +64,21 @@ bool UCreatureCollectionSubsystem::AddCreature(FCreatureInstance NewCreature)
         NewCreature.StorageBoxIndex = TargetBox;
 
         Storage.Add(SpeciesName, NewCreature);
-        UE_LOG(LogTemp, Log, TEXT("AddCreature: Party full. Added %s to Storage Box %d."), *SpeciesName.ToString(), TargetBox);
+        UE_LOG(LogTemp, Log, TEXT("CallAddCreature: Party full. Added %s to Storage Box %d."), *SpeciesName.ToString(), TargetBox);
         return true;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("AddCreature: Storage Full (All Boxes). Cannot add %s."), *SpeciesName.ToString());
+    UE_LOG(LogTemp, Warning, TEXT("CallAddCreature: Storage Full (All Boxes). Cannot add %s."), *SpeciesName.ToString());
     return false;
 }
 
-bool UCreatureCollectionSubsystem::SwapCreatureFromStorage(FName SpeciesName, int32 PartySlotIndex)
+bool UCreatureCollectionSubsystem::CallSwapCreatureFromStorage(FName SpeciesName, int32 PartySlotIndex)
 {
     if (PartySlotIndex < 0 || PartySlotIndex >= MaxPartySize) return false;
 
     if (PartySlotIndex == 0 && bLockFirstPartySlot && Party.IsValidIndex(0))
     {
-        UE_LOG(LogTemp, Warning, TEXT("SwapCreatureFromStorage: Cannot swap into locked Slot 0."));
+        UE_LOG(LogTemp, Warning, TEXT("CallSwapCreatureFromStorage: Cannot swap into locked Slot 0."));
         return false;
     }
 
@@ -115,7 +115,7 @@ bool UCreatureCollectionSubsystem::SwapCreatureFromStorage(FName SpeciesName, in
     return true;
 }
 
-bool UCreatureCollectionSubsystem::SendToStorage(int32 PartySlotIndex)
+bool UCreatureCollectionSubsystem::CallSendToStorage(int32 PartySlotIndex)
 {
     if (!Party.IsValidIndex(PartySlotIndex)) return false;
 
@@ -154,7 +154,7 @@ bool UCreatureCollectionSubsystem::SendToStorage(int32 PartySlotIndex)
     return false;
 }
 
-void UCreatureCollectionSubsystem::HealAllParty()
+void UCreatureCollectionSubsystem::CallHealAllParty()
 {
     for (FCreatureInstance& Creature : Party)
     {
@@ -163,21 +163,21 @@ void UCreatureCollectionSubsystem::HealAllParty()
     }
 }
 
-void UCreatureCollectionSubsystem::UpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead)
+void UCreatureCollectionSubsystem::CallUpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead)
 {
     if (Party.IsValidIndex(PartySlotIndex))
     {
         Party[PartySlotIndex].CurrentHP = NewCurrentHP;
         Party[PartySlotIndex].bIsDead = bIsDead;
 
-        if (CheckAllPartyDead())
+        if (CallCheckAllPartyDead())
         {
             OnAllPartyDead.Broadcast();
         }
     }
 }
 
-bool UCreatureCollectionSubsystem::CheckAllPartyDead() const
+bool UCreatureCollectionSubsystem::CallCheckAllPartyDead() const
 {
     if (Party.Num() == 0) return true;
 
@@ -188,16 +188,16 @@ bool UCreatureCollectionSubsystem::CheckAllPartyDead() const
     return true;
 }
 
-TSubclassOf<AActor> UCreatureCollectionSubsystem::GetCreatureEvolutionClass(const FCreatureInstance& Creature) const
+TSubclassOf<AActor> UCreatureCollectionSubsystem::CallGetCreatureEvolutionClass(const FCreatureInstance& Creature) const
 {
     if (Creature.CreatureDefinition)
     {
-        return Creature.CreatureDefinition->GetActorClassForLevel(Creature.CurrentLevel);
+        return Creature.CreatureDefinition->CallGetActorClassForLevel(Creature.CurrentLevel);
     }
     return nullptr;
 }
 
-bool UCreatureCollectionSubsystem::IsSpeciesCaught(FName SpeciesName) const
+bool UCreatureCollectionSubsystem::CallIsSpeciesCaught(FName SpeciesName) const
 {
     if (Storage.Contains(SpeciesName)) return true;
 
@@ -211,7 +211,7 @@ bool UCreatureCollectionSubsystem::IsSpeciesCaught(FName SpeciesName) const
     return false;
 }
 
-TArray<FCreatureInstance> UCreatureCollectionSubsystem::GetCreaturesInBox(int32 BoxIndex) const
+TArray<FCreatureInstance> UCreatureCollectionSubsystem::CallGetCreaturesInBox(int32 BoxIndex) const
 {
     TArray<FCreatureInstance> Result;
     for (const auto& Elem : Storage)
@@ -224,7 +224,7 @@ TArray<FCreatureInstance> UCreatureCollectionSubsystem::GetCreaturesInBox(int32 
     return Result;
 }
 
-TArray<FCreatureInstance> UCreatureCollectionSubsystem::GetAllCreaturesSorted(ECreatureSortMethod Method) const
+TArray<FCreatureInstance> UCreatureCollectionSubsystem::CallGetAllCreaturesSorted(ECreatureSortMethod Method) const
 {
     TArray<FCreatureInstance> Result;
     Storage.GenerateValueArray(Result);
@@ -249,7 +249,7 @@ TArray<FCreatureInstance> UCreatureCollectionSubsystem::GetAllCreaturesSorted(EC
     return Result;
 }
 
-FCreatureCollectionSaveData UCreatureCollectionSubsystem::GetCollectionSaveData() const
+FCreatureCollectionSaveData UCreatureCollectionSubsystem::CallGetCollectionSaveData() const
 {
     FCreatureCollectionSaveData Data;
     Data.Party = Party;
@@ -258,10 +258,10 @@ FCreatureCollectionSaveData UCreatureCollectionSubsystem::GetCollectionSaveData(
     return Data;
 }
 
-void UCreatureCollectionSubsystem::LoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData)
+void UCreatureCollectionSubsystem::CallLoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData)
 {
     Party = SaveData.Party;
     Storage = SaveData.Storage;
     TotalCaptureCount = SaveData.TotalCaptureCount;
-    UE_LOG(LogTemp, Log, TEXT("LoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d"), Party.Num(), Storage.Num(), TotalCaptureCount);
+    UE_LOG(LogTemp, Log, TEXT("CallLoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d"), Party.Num(), Storage.Num(), TotalCaptureCount);
 }
