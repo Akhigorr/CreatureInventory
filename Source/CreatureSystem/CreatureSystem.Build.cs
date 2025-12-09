@@ -36,7 +36,8 @@ public class CreatureSystem : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				// ... add private dependencies that you statically link with here ...
+				"Json",
+				"JsonUtilities"
 			}
 			);
 

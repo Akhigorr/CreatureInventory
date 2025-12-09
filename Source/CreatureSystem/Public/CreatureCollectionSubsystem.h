@@ -101,4 +101,18 @@ public:
      */
     UFUNCTION(BlueprintPure, Category = "Creature Collection")
     bool IsSpeciesCaught(FName SpeciesName) const;
+
+    /**
+     * Exports the current Party and Storage to a JSON string.
+     * Useful for Save Games.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
+    FString ExportSaveData();
+
+    /**
+     * Imports Party and Storage from a JSON string.
+     * WARNING: Overwrites current collection.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
+    bool ImportSaveData(const FString& JsonData);
 };
