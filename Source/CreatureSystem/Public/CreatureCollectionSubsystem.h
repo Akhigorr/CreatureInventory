@@ -28,12 +28,19 @@ public:
     int32 MaxPartySize = 6;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
-    int32 MaxStorageSize = 100;
+    int32 MaxBoxes = 32;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
+    int32 BoxCapacity = 30;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
     bool bLockFirstPartySlot = true;
 
     // --- State ---
+
+    // Global counter for capture sorting. Saved via SaveData.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
+    int32 TotalCaptureCount = 0;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
     TArray<FCreatureInstance> Party;
@@ -101,6 +108,18 @@ public:
      */
     UFUNCTION(BlueprintPure, Category = "Creature Collection")
     bool IsSpeciesCaught(FName SpeciesName) const;
+
+    /**
+     * Returns all creatures currently stored in a specific box.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection")
+    TArray<FCreatureInstance> GetCreaturesInBox(int32 BoxIndex) const;
+
+    /**
+     * Returns a sorted list of ALL creatures in Storage (useful for 'All' view).
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection")
+    TArray<FCreatureInstance> GetAllCreaturesSorted(ECreatureSortMethod Method) const;
 
     /**
      * Returns a struct containing the current Party and Storage data.

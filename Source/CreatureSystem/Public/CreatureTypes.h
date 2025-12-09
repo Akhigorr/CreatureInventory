@@ -4,6 +4,15 @@
 #include "CreatureDefinition.h"
 #include "CreatureTypes.generated.h"
 
+UENUM(BlueprintType)
+enum class ECreatureSortMethod : uint8
+{
+    Newest      UMETA(DisplayName = "Newest First"),
+    Oldest      UMETA(DisplayName = "Oldest First"),
+    LevelHigh   UMETA(DisplayName = "Highest Level"),
+    LevelLow    UMETA(DisplayName = "Lowest Level")
+};
+
 /**
  * Represents a unique instance of a caught creature.
  */
@@ -14,14 +23,9 @@ struct FCreatureInstance
 
 public:
     // The static species definition (e.g., "Katraji")
+    // MEM_01: Use TObjectPtr for UPROPERTY
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
-    UCreatureDefinition* CreatureDefinition;
-
-    // Unique Identifier for this specific instance (optional, but good for map keys if needed,
-    // though the prompt implies Species Uniqueness, so Definition->SpeciesName might be enough.
-    // However, keeping an Instance ID is safer.
-    // Wait, the prompt said "capture one of even creature", implying Species Uniqueness.
-    // So CreatureDefinition->SpeciesName is likely the unique Key.)
+    TObjectPtr<UCreatureDefinition> CreatureDefinition;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
     int32 CurrentLevel;
@@ -35,12 +39,22 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
     bool bIsDead;
 
+    // Used for sorting by "Newest". Incrementing counter from Subsystem.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
+    int32 CaptureIndex;
+
+    // Which box this creature belongs to in storage.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
+    int32 StorageBoxIndex;
+
     FCreatureInstance()
         : CreatureDefinition(nullptr)
         , CurrentLevel(1)
         , CurrentHP(100.f)
         , MaxHP(100.f)
         , bIsDead(false)
+        , CaptureIndex(0)
+        , StorageBoxIndex(0)
     {}
 
     // Equality operator for TArray::Contains or generic checks
@@ -64,4 +78,8 @@ struct FCreatureCollectionSaveData
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Save Data")
     TMap<FName, FCreatureInstance> Storage;
+
+    // Persist the global capture counter
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Save Data")
+    int32 TotalCaptureCount = 0;
 };
