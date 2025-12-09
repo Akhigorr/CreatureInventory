@@ -26,7 +26,7 @@ public:
     // --- Configuration ---
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
-    int32 MaxPartySize = 6;
+    int32 MaxPartySize = 5;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
     int32 MaxBoxes = 32;
@@ -183,6 +183,13 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
     void CallPossessCreature(APlayerController* PlayerController, AActor* CreatureActor);
+
+    /**
+     * Sets the index of the party slot currently controlled by the player.
+     * Call this on Game Start (e.g. from GameInstance or GameMode) to sync the system.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
+    void CallSetCurrentActiveSlot(int32 SlotIndex);
 
     /**
      * Handles the full lifecycle of switching creatures:

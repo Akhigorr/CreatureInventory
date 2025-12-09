@@ -41,9 +41,10 @@ All functions are prefixed with `Call` for easy searching.
 *   **`CallSpawnCreatureFromParty(PartySlotIndex, Transform, OutActor)`**: Spawns the Actor defined in the Evolution Map for the creature's current level.
 *   **`CallPossessCreature(PlayerController, CreatureActor)`**: Helper to make the Player Controller possess the spawned creature.
     *   *Note*: The spawned actor must implement `ICreatureVesselInterface` to receive stats.
++*   **`CallSetCurrentActiveSlot(SlotIndex)`**: Syncs the system to know which creature you are controlling. **Call this on Game Start (e.g., from GameInstance/GameMode) after loading save data.**
 *   **`CallSwitchActiveCreature(PlayerController, NewSlot, Transform, bDespawnOld)`**: The main function for swapping characters. It automatically saves the current creature's state (HP/XP) back to the party, destroys the old actor, and spawns/possesses the new one.
 
-### Stats & Logic
+ ### Stats & Logic
 *   **`CallUpdateCreatureXP(Slot, Level, XP, XPToNext)`**: Updates progression data.
 *   **`CallUpdateCreatureAttributes(Slot, AttributeMap)`**: Updates generic stats (Attack, Def, etc.).
 *   **`CallHealAllParty()`**: Resets HP to MaxHP for all party members.

@@ -179,6 +179,12 @@ bool UCreatureCollectionSubsystem::CallSendToStorage(int32 PartySlotIndex)
         Storage.Add(MovingCreature.CreatureDefinition->SpeciesName, MovingCreature);
         Party.RemoveAt(PartySlotIndex);
 
+        // If we removed an element BEFORE the active slot, the active slot index shifts down.
+        if (ActivePartySlotIndex > -1 && PartySlotIndex < ActivePartySlotIndex)
+        {
+            ActivePartySlotIndex--;
+        }
+
         OnPartyUpdated.Broadcast();
         OnStorageUpdated.Broadcast(TargetBox);
         return true;
@@ -419,6 +425,12 @@ void UCreatureCollectionSubsystem::CallPossessCreature(APlayerController* Player
     }
 
     PlayerController->Possess(NewPawn);
+}
+
+void UCreatureCollectionSubsystem::CallSetCurrentActiveSlot(int32 SlotIndex)
+{
+    ActivePartySlotIndex = SlotIndex;
+    UE_LOG(LogTemp, Log, TEXT("CallSetCurrentActiveSlot: Set active slot to %d."), ActivePartySlotIndex);
 }
 
 void UCreatureCollectionSubsystem::CallSwitchActiveCreature(APlayerController* PlayerController, int32 NewPartySlotIndex, FTransform SpawnTransform, bool bDespawnOld)
