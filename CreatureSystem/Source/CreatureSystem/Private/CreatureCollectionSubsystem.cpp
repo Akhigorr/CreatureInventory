@@ -177,6 +177,24 @@ void UCreatureCollectionSubsystem::CallUpdatePartyMemberState(int32 PartySlotInd
     }
 }
 
+void UCreatureCollectionSubsystem::CallUpdateCreatureXP(int32 PartySlotIndex, int32 NewLevel, float NewCurrentXP, float NewXPToNext)
+{
+    if (Party.IsValidIndex(PartySlotIndex))
+    {
+        Party[PartySlotIndex].CurrentLevel = NewLevel;
+        Party[PartySlotIndex].CurrentXP = NewCurrentXP;
+        Party[PartySlotIndex].XPToNextLevel = NewXPToNext;
+    }
+}
+
+void UCreatureCollectionSubsystem::CallUpdateCreatureAttributes(int32 PartySlotIndex, const TMap<FName, float>& NewAttributes)
+{
+    if (Party.IsValidIndex(PartySlotIndex))
+    {
+        Party[PartySlotIndex].Attributes = NewAttributes;
+    }
+}
+
 bool UCreatureCollectionSubsystem::CallCheckAllPartyDead() const
 {
     if (Party.Num() == 0) return true;

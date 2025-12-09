@@ -91,6 +91,18 @@ public:
     void CallUpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead);
 
     /**
+     * Updates a specific creature's XP and Level progress.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection")
+    void CallUpdateCreatureXP(int32 PartySlotIndex, int32 NewLevel, float NewCurrentXP, float NewXPToNext);
+
+    /**
+     * Updates the full attribute map for a creature (e.g., after leveling up).
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection")
+    void CallUpdateCreatureAttributes(int32 PartySlotIndex, const TMap<FName, float>& NewAttributes);
+
+    /**
      * Checks if all party members are dead.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")

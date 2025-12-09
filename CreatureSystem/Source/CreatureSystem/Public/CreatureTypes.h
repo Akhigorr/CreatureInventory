@@ -37,6 +37,16 @@ public:
     float MaxHP;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
+    float CurrentXP;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
+    float XPToNextLevel;
+
+    // Stores calculated stats (Attack, Defense, etc.) for UI display.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
+    TMap<FName, float> Attributes;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Instance")
     bool bIsDead;
 
     // Used for sorting by "Newest". Incrementing counter from Subsystem.
@@ -52,6 +62,8 @@ public:
         , CurrentLevel(1)
         , CurrentHP(100.f)
         , MaxHP(100.f)
+        , CurrentXP(0.f)
+        , XPToNextLevel(100.f)
         , bIsDead(false)
         , CaptureIndex(0)
         , StorageBoxIndex(0)
