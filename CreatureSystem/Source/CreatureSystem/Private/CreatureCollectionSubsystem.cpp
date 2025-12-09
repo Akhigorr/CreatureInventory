@@ -31,6 +31,8 @@ bool UCreatureCollectionSubsystem::CallAddCreature(FCreatureInstance NewCreature
     if (Party.Num() < MaxPartySize)
     {
         Party.Add(NewCreature);
+        OnPartyUpdated.Broadcast();
+        OnCreatureAdded.Broadcast(NewCreature);
         UE_LOG(LogTemp, Log, TEXT("CallAddCreature: Added %s to Party."), *SpeciesName.ToString());
         return true;
     }
@@ -64,6 +66,8 @@ bool UCreatureCollectionSubsystem::CallAddCreature(FCreatureInstance NewCreature
         NewCreature.StorageBoxIndex = TargetBox;
 
         Storage.Add(SpeciesName, NewCreature);
+        OnStorageUpdated.Broadcast(TargetBox);
+        OnCreatureAdded.Broadcast(NewCreature);
         UE_LOG(LogTemp, Log, TEXT("CallAddCreature: Party full. Added %s to Storage Box %d."), *SpeciesName.ToString(), TargetBox);
         return true;
     }
@@ -93,6 +97,8 @@ bool UCreatureCollectionSubsystem::CallSwapCreatureFromStorage(FName SpeciesName
     {
         Party.Add(StorageCreature);
         Storage.Remove(SpeciesName);
+        OnPartyUpdated.Broadcast();
+        OnStorageUpdated.Broadcast(StorageCreature.StorageBoxIndex);
         return true;
     }
 
@@ -111,6 +117,9 @@ bool UCreatureCollectionSubsystem::CallSwapCreatureFromStorage(FName SpeciesName
 
     Storage.Remove(SpeciesName);
     Party[PartySlotIndex] = StorageCreature;
+
+    OnPartyUpdated.Broadcast();
+    OnStorageUpdated.Broadcast(StorageCreature.StorageBoxIndex);
 
     return true;
 }
@@ -148,6 +157,9 @@ bool UCreatureCollectionSubsystem::CallSendToStorage(int32 PartySlotIndex)
     {
         Storage.Add(MovingCreature.CreatureDefinition->SpeciesName, MovingCreature);
         Party.RemoveAt(PartySlotIndex);
+
+        OnPartyUpdated.Broadcast();
+        OnStorageUpdated.Broadcast(TargetBox);
         return true;
     }
 
@@ -161,6 +173,7 @@ void UCreatureCollectionSubsystem::CallHealAllParty()
         Creature.CurrentHP = Creature.MaxHP;
         Creature.bIsDead = false;
     }
+    OnPartyUpdated.Broadcast();
 }
 
 void UCreatureCollectionSubsystem::CallUpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead)
@@ -169,6 +182,8 @@ void UCreatureCollectionSubsystem::CallUpdatePartyMemberState(int32 PartySlotInd
     {
         Party[PartySlotIndex].CurrentHP = NewCurrentHP;
         Party[PartySlotIndex].bIsDead = bIsDead;
+
+        OnPartyUpdated.Broadcast();
 
         if (CallCheckAllPartyDead())
         {
@@ -184,6 +199,7 @@ void UCreatureCollectionSubsystem::CallUpdateCreatureXP(int32 PartySlotIndex, in
         Party[PartySlotIndex].CurrentLevel = NewLevel;
         Party[PartySlotIndex].CurrentXP = NewCurrentXP;
         Party[PartySlotIndex].XPToNextLevel = NewXPToNext;
+        OnPartyUpdated.Broadcast();
     }
 }
 
@@ -192,6 +208,7 @@ void UCreatureCollectionSubsystem::CallUpdateCreatureAttributes(int32 PartySlotI
     if (Party.IsValidIndex(PartySlotIndex))
     {
         Party[PartySlotIndex].Attributes = NewAttributes;
+        OnPartyUpdated.Broadcast();
     }
 }
 
@@ -281,5 +298,11 @@ void UCreatureCollectionSubsystem::CallLoadCollectionSaveData(const FCreatureCol
     Party = SaveData.Party;
     Storage = SaveData.Storage;
     TotalCaptureCount = SaveData.TotalCaptureCount;
+
+    // Broadcast updates after load so UI refreshes
+    OnPartyUpdated.Broadcast();
+    // We don't broadcast StorageUpdated for all boxes as that would be expensive.
+    // UI usually pulls storage data on open. But we can't easily iterate all boxes here efficiently.
+
     UE_LOG(LogTemp, Log, TEXT("CallLoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d"), Party.Num(), Storage.Num(), TotalCaptureCount);
 }

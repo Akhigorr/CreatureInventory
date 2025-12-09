@@ -6,6 +6,9 @@
 #include "CreatureCollectionSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllPartyDead);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPartyUpdated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStorageUpdated, int32, BoxIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCreatureAdded, const FCreatureInstance&, NewCreature);
 
 /**
  * Subsystem to manage the player's creature collection (Party + Storage).
@@ -20,9 +23,6 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
     // --- Configuration ---
-    // Note: Since Subsystems aren't Actors, we can't easily "EditAnywhere" on an instance in the level.
-    // However, we can expose these as BlueprintReadWrite variables that a GameMode/Controller configures on start,
-    // or load them from a Global Settings object. For this plugin, we'll keep them as variables with defaults.
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
     int32 MaxPartySize = 6;
@@ -50,8 +50,21 @@ public:
 
     // --- Delegates ---
 
+    // Fired when the party takes damage or dies
     UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
     FOnAllPartyDead OnAllPartyDead;
+
+    // Fired whenever the Party array changes (Add, Swap, Heal, Update)
+    UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
+    FOnPartyUpdated OnPartyUpdated;
+
+    // Fired whenever a specific storage box changes (Add, Swap)
+    UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
+    FOnStorageUpdated OnStorageUpdated;
+
+    // Fired when a new creature is successfully caught (Party or Storage)
+    UPROPERTY(BlueprintAssignable, Category = "Creature Collection|Events")
+    FOnCreatureAdded OnCreatureAdded;
 
     // --- API ---
 
