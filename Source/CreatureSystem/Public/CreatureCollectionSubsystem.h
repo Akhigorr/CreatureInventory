@@ -1,44 +1,43 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Subsystems/LocalPlayerSubsystem.h"
 #include "CreatureTypes.h"
-#include "CreatureCollectionComponent.generated.h"
+#include "CreatureCollectionSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllPartyDead);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CREATURESYSTEM_API UCreatureCollectionComponent : public UActorComponent
+/**
+ * Subsystem to manage the player's creature collection (Party + Storage).
+ * Automatically created for the Local Player.
+ */
+UCLASS()
+class CREATURESYSTEM_API UCreatureCollectionSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
-	UCreatureCollectionComponent();
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:
     // --- Configuration ---
+    // Note: Since Subsystems aren't Actors, we can't easily "EditAnywhere" on an instance in the level.
+    // However, we can expose these as BlueprintReadWrite variables that a GameMode/Controller configures on start,
+    // or load them from a Global Settings object. For this plugin, we'll keep them as variables with defaults.
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
-    int32 MaxPartySize;
+    int32 MaxPartySize = 6;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
-    int32 MaxStorageSize;
+    int32 MaxStorageSize = 100;
 
-    // If true, the creature at Party Slot 0 cannot be moved to storage or swapped out (unless by specific game logic override not implemented here).
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Collection|Config")
-    bool bLockFirstPartySlot;
+    bool bLockFirstPartySlot = true;
 
     // --- State ---
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
     TArray<FCreatureInstance> Party;
 
-    // Key is the SpeciesName from the CreatureDefinition
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Creature Collection|State")
     TMap<FName, FCreatureInstance> Storage;
 
@@ -53,7 +52,7 @@ public:
      * Tries to add a new creature to the collection.
      * Checks uniqueness (Species) across both Party and Storage.
      * Tries Party first, then Storage.
-     * Returns true if successfully added to either.
+     * Returns true if successfully added.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
     bool AddCreature(FCreatureInstance NewCreature);
@@ -61,29 +60,25 @@ public:
     /**
      * Swaps a creature from Storage to the Party.
      * @param SpeciesName The ID of the creature in Storage.
-     * @param PartySlotIndex The index in the Party array to swap into (0 to MaxPartySize-1).
-     * @return True if swap was successful.
+     * @param PartySlotIndex The index in the Party array to swap into.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
     bool SwapCreatureFromStorage(FName SpeciesName, int32 PartySlotIndex);
 
     /**
      * Sends a creature from the Party to Storage.
-     * @param PartySlotIndex The index of the party member to send.
-     * @return True if successful.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
     bool SendToStorage(int32 PartySlotIndex);
 
     /**
-     * Heals all creatures in the Party (Reset HP to Max, clear Death).
+     * Heals all creatures in the Party.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
     void HealAllParty();
 
     /**
      * Updates a specific creature's state (e.g., after taking damage).
-     * Automatically checks if all party members are dead.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection")
     void UpdatePartyMemberState(int32 PartySlotIndex, float NewCurrentHP, bool bIsDead);
@@ -95,12 +90,15 @@ public:
     bool CheckAllPartyDead() const;
 
     /**
-     * Helper to get the correct actor class for a creature instance based on its level.
+     * Helper to get the correct actor class based on level.
      */
     UFUNCTION(BlueprintPure, Category = "Creature Collection")
     TSubclassOf<AActor> GetCreatureEvolutionClass(const FCreatureInstance& Creature) const;
 
-private:
-    // Helper to check if we already own this species
-    bool HasSpecies(FName SpeciesName) const;
+    /**
+     * Checks if a species is already present in the collection (Party or Storage).
+     * Useful for Spawners to decide whether to spawn a pickup.
+     */
+    UFUNCTION(BlueprintPure, Category = "Creature Collection")
+    bool IsSpeciesCaught(FName SpeciesName) const;
 };
