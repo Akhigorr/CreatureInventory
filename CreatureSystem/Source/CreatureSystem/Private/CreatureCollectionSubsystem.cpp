@@ -1,5 +1,10 @@
 #include "CreatureCollectionSubsystem.h"
 #include "Algo/Sort.h"
+#include "CreatureVesselInterface.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "Engine/World.h"
 
 void UCreatureCollectionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -305,4 +310,61 @@ void UCreatureCollectionSubsystem::CallLoadCollectionSaveData(const FCreatureCol
     // UI usually pulls storage data on open. But we can't easily iterate all boxes here efficiently.
 
     UE_LOG(LogTemp, Log, TEXT("CallLoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d"), Party.Num(), Storage.Num(), TotalCaptureCount);
+}
+
+void UCreatureCollectionSubsystem::CallSpawnCreatureFromParty(int32 PartySlotIndex, FTransform SpawnTransform, AActor*& OutActor)
+{
+    OutActor = nullptr;
+
+    if (!Party.IsValidIndex(PartySlotIndex))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallSpawnCreatureFromParty: Invalid Index %d"), PartySlotIndex);
+        return;
+    }
+
+    const FCreatureInstance& Data = Party[PartySlotIndex];
+    TSubclassOf<AActor> ActorClass = CallGetCreatureEvolutionClass(Data);
+
+    if (!ActorClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallSpawnCreatureFromParty: No Class found for creature in slot %d"), PartySlotIndex);
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (World)
+    {
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+        AActor* Spawned = World->SpawnActor<AActor>(ActorClass, SpawnTransform, SpawnParams);
+
+        if (Spawned)
+        {
+            // Initialize Interface if implemented
+            if (Spawned->Implements<UCreatureVesselInterface>())
+            {
+                ICreatureVesselInterface::Execute_CallInitializeCreature(Spawned, Data);
+            }
+            OutActor = Spawned;
+        }
+    }
+}
+
+void UCreatureCollectionSubsystem::CallPossessCreature(APlayerController* PlayerController, AActor* CreatureActor)
+{
+    if (!PlayerController)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallPossessCreature: Invalid PlayerController"));
+        return;
+    }
+
+    APawn* NewPawn = Cast<APawn>(CreatureActor);
+    if (!NewPawn)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CallPossessCreature: Actor is not a Pawn."));
+        return;
+    }
+
+    PlayerController->Possess(NewPawn);
 }

@@ -159,4 +159,19 @@ public:
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
     void CallLoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData);
+
+    /**
+     * Spawns a party member into the world and initializes it with its data.
+     * @param PartySlotIndex Index in the Party array.
+     * @param SpawnTransform Location/Rotation to spawn at.
+     * @param OutActor Returns the spawned actor (can be null if failed).
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
+    void CallSpawnCreatureFromParty(int32 PartySlotIndex, FTransform SpawnTransform, AActor*& OutActor);
+
+    /**
+     * Helper to possess a creature pawn.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Spawning")
+    void CallPossessCreature(APlayerController* PlayerController, AActor* CreatureActor);
 };
