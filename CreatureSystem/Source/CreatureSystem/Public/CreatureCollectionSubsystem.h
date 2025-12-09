@@ -78,6 +78,13 @@ public:
     // --- API ---
 
     /**
+     * Initializes the system with a Starter Creature (Prime Vessel).
+     * Call this ONLY on a new game. It clears existing data.
+     */
+    UFUNCTION(BlueprintCallable, Category = "Creature Collection|Setup")
+    void CallInitializeSystem(UCreatureDefinition* PrimeVesselDef);
+
+    /**
      * Tries to add a new creature to the collection.
      * Checks uniqueness (Species) across both Party and Storage.
      * Tries Party first, then Storage.

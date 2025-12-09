@@ -32,6 +32,7 @@ A **Local Player Subsystem** that manages the player's inventory. Accessible glo
 All functions are prefixed with `Call` for easy searching.
 
 ### Collection Management
+*   **`CallInitializeSystem(PrimeVesselDef)`**: Initializes the subsystem with a starter creature. Clears all existing data. Call this when starting a **New Game**.
 *   **`CallAddCreature(NewCreature)`**: Adds a creature. Tries Party first, then finds an empty Storage Box. Returns `false` if species is unique and already caught.
 *   **`CallSwapCreatureFromStorage(SpeciesName, PartySlotIndex)`**: Swaps a creature from the storage box into the active party slot. Handles swapping back if slot is occupied.
 *   **`CallSendToStorage(PartySlotIndex)`**: Sends a party member to the first available storage box.

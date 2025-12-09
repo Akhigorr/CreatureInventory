@@ -12,6 +12,37 @@ void UCreatureCollectionSubsystem::Initialize(FSubsystemCollectionBase& Collecti
     // Default values are set in header
 }
 
+void UCreatureCollectionSubsystem::CallInitializeSystem(UCreatureDefinition* PrimeVesselDef)
+{
+    if (!PrimeVesselDef)
+    {
+        UE_LOG(LogTemp, Error, TEXT("CallInitializeSystem: Invalid Prime Vessel Definition."));
+        return;
+    }
+
+    // Reset Data
+    Party.Empty();
+    Storage.Empty();
+    TotalCaptureCount = 0;
+    ActivePartySlotIndex = 0; // The player will start controlling this
+
+    // Create Starter
+    FCreatureInstance Starter;
+    Starter.CreatureDefinition = PrimeVesselDef;
+    Starter.CurrentLevel = 1;
+    Starter.MaxHP = PrimeVesselDef->BaseMaxHP;
+    Starter.CurrentHP = Starter.MaxHP;
+    Starter.CaptureIndex = ++TotalCaptureCount;
+
+    // Add directly (bypass IsCaught check)
+    Party.Add(Starter);
+
+    OnPartyUpdated.Broadcast();
+    OnCreatureAdded.Broadcast(Starter);
+
+    UE_LOG(LogTemp, Log, TEXT("CallInitializeSystem: System initialized with Prime Vessel: %s"), *PrimeVesselDef->SpeciesName.ToString());
+}
+
 bool UCreatureCollectionSubsystem::CallAddCreature(FCreatureInstance NewCreature)
 {
     if (!NewCreature.CreatureDefinition)
