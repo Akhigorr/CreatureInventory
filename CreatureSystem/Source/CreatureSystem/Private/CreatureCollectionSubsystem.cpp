@@ -256,7 +256,7 @@ TArray<FCreatureInstance> UCreatureCollectionSubsystem::CallGetCreaturesInBox(in
     TArray<FCreatureInstance> Result;
     for (const auto& Elem : Storage)
     {
-        if (Elem.Value.StorageBoxIndex == BoxIndex)
+        if (Elem.Value.CreatureDefinition && Elem.Value.StorageBoxIndex == BoxIndex)
         {
             Result.Add(Elem.Value);
         }
@@ -267,7 +267,14 @@ TArray<FCreatureInstance> UCreatureCollectionSubsystem::CallGetCreaturesInBox(in
 TArray<FCreatureInstance> UCreatureCollectionSubsystem::CallGetAllCreaturesSorted(ECreatureSortMethod Method) const
 {
     TArray<FCreatureInstance> Result;
-    Storage.GenerateValueArray(Result);
+    // Generate manually to filter nulls
+    for (const auto& Elem : Storage)
+    {
+        if (Elem.Value.CreatureDefinition)
+        {
+            Result.Add(Elem.Value);
+        }
+    }
 
     Algo::Sort(Result, [Method](const FCreatureInstance& A, const FCreatureInstance& B)
     {
@@ -300,16 +307,42 @@ FCreatureCollectionSaveData UCreatureCollectionSubsystem::CallGetCollectionSaveD
 
 void UCreatureCollectionSubsystem::CallLoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData)
 {
-    Party = SaveData.Party;
-    Storage = SaveData.Storage;
+    // Sanitize Party
+    Party.Empty();
+    int32 RemovedParty = 0;
+    for (const FCreatureInstance& Creature : SaveData.Party)
+    {
+        if (Creature.CreatureDefinition)
+        {
+            Party.Add(Creature);
+        }
+        else
+        {
+            RemovedParty++;
+        }
+    }
+
+    // Sanitize Storage
+    Storage.Empty();
+    int32 RemovedStorage = 0;
+    for (const auto& Elem : SaveData.Storage)
+    {
+        if (Elem.Value.CreatureDefinition)
+        {
+            Storage.Add(Elem.Key, Elem.Value);
+        }
+        else
+        {
+            RemovedStorage++;
+        }
+    }
+
     TotalCaptureCount = SaveData.TotalCaptureCount;
 
     // Broadcast updates after load so UI refreshes
     OnPartyUpdated.Broadcast();
-    // We don't broadcast StorageUpdated for all boxes as that would be expensive.
-    // UI usually pulls storage data on open. But we can't easily iterate all boxes here efficiently.
 
-    UE_LOG(LogTemp, Log, TEXT("CallLoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d"), Party.Num(), Storage.Num(), TotalCaptureCount);
+    UE_LOG(LogTemp, Log, TEXT("CallLoadCollectionSaveData: Loaded %d party, %d storage. Total Captures: %d. Pruned %d invalid entries."), Party.Num(), Storage.Num(), TotalCaptureCount, (RemovedParty + RemovedStorage));
 }
 
 void UCreatureCollectionSubsystem::CallSpawnCreatureFromParty(int32 PartySlotIndex, FTransform SpawnTransform, AActor*& OutActor)
