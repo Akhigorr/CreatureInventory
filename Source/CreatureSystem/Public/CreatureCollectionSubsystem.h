@@ -103,16 +103,16 @@ public:
     bool IsSpeciesCaught(FName SpeciesName) const;
 
     /**
-     * Exports the current Party and Storage to a JSON string.
-     * Useful for Save Games.
+     * Returns a struct containing the current Party and Storage data.
+     * Pass this struct to your SaveGame object to save progress.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
-    FString ExportSaveData();
+    FCreatureCollectionSaveData GetCollectionSaveData() const;
 
     /**
-     * Imports Party and Storage from a JSON string.
-     * WARNING: Overwrites current collection.
+     * Overwrites the current Party and Storage with data from the provided struct.
+     * Use this when loading from a SaveGame object.
      */
     UFUNCTION(BlueprintCallable, Category = "Creature Collection|Persistence")
-    bool ImportSaveData(const FString& JsonData);
+    void LoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData);
 };

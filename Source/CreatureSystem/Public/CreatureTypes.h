@@ -49,3 +49,19 @@ public:
         return CreatureDefinition == Other.CreatureDefinition;
     }
 };
+
+/**
+ * Wrapper struct for saving/loading the entire collection.
+ * Use this in your SaveGame object.
+ */
+USTRUCT(BlueprintType)
+struct FCreatureCollectionSaveData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Save Data")
+    TArray<FCreatureInstance> Party;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Creature Save Data")
+    TMap<FName, FCreatureInstance> Storage;
+};

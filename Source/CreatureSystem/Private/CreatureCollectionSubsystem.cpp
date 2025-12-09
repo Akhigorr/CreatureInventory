@@ -1,6 +1,4 @@
 #include "CreatureCollectionSubsystem.h"
-#include "Serialization/JsonSerializer.h"
-#include "JsonObjectConverter.h"
 
 void UCreatureCollectionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -171,135 +169,17 @@ bool UCreatureCollectionSubsystem::IsSpeciesCaught(FName SpeciesName) const
     return false;
 }
 
-// --- Helper for Json Serialization ---
-
-// Manually serialize because UObject* (Definition) doesn't serialize nicely with FJsonObjectConverter by default without custom handling
-TSharedPtr<FJsonObject> SerializeCreatureInstance(const FCreatureInstance& Instance)
+FCreatureCollectionSaveData UCreatureCollectionSubsystem::GetCollectionSaveData() const
 {
-    TSharedPtr<FJsonObject> JsonObj = MakeShareable(new FJsonObject);
-
-    if (Instance.CreatureDefinition)
-    {
-        JsonObj->SetStringField("DefinitionPath", Instance.CreatureDefinition->GetPathName());
-    }
-    else
-    {
-        JsonObj->SetStringField("DefinitionPath", "");
-    }
-
-    JsonObj->SetNumberField("CurrentLevel", Instance.CurrentLevel);
-    JsonObj->SetNumberField("CurrentHP", Instance.CurrentHP);
-    JsonObj->SetNumberField("MaxHP", Instance.MaxHP);
-    JsonObj->SetBoolField("bIsDead", Instance.bIsDead);
-
-    return JsonObj;
+    FCreatureCollectionSaveData Data;
+    Data.Party = Party;
+    Data.Storage = Storage;
+    return Data;
 }
 
-FCreatureInstance DeserializeCreatureInstance(const TSharedPtr<FJsonObject>& JsonObj)
+void UCreatureCollectionSubsystem::LoadCollectionSaveData(const FCreatureCollectionSaveData& SaveData)
 {
-    FCreatureInstance Instance;
-
-    FString Path = JsonObj->GetStringField("DefinitionPath");
-    if (!Path.IsEmpty())
-    {
-        // Load the asset
-        Instance.CreatureDefinition = LoadObject<UCreatureDefinition>(nullptr, *Path);
-    }
-
-    Instance.CurrentLevel = JsonObj->GetNumberField("CurrentLevel");
-    Instance.CurrentHP = JsonObj->GetNumberField("CurrentHP");
-    Instance.MaxHP = JsonObj->GetNumberField("MaxHP");
-    Instance.bIsDead = JsonObj->GetBoolField("bIsDead");
-
-    return Instance;
-}
-
-FString UCreatureCollectionSubsystem::ExportSaveData()
-{
-    TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject);
-
-    // 1. Serialize Party
-    TArray<TSharedPtr<FJsonValue>> PartyArray;
-    for (const FCreatureInstance& Creature : Party)
-    {
-        TSharedPtr<FJsonObject> CreatureJson = SerializeCreatureInstance(Creature);
-        PartyArray.Add(MakeShareable(new FJsonValueObject(CreatureJson)));
-    }
-    RootObject->SetArrayField("Party", PartyArray);
-
-    // 2. Serialize Storage (Array of Objects)
-    TArray<TSharedPtr<FJsonValue>> StorageArray;
-    for (const auto& Elem : Storage)
-    {
-        TSharedPtr<FJsonObject> CreatureJson = SerializeCreatureInstance(Elem.Value);
-        // We don't need to explicitly save the Key (SpeciesName) because it's derived from the Definition inside the struct.
-        StorageArray.Add(MakeShareable(new FJsonValueObject(CreatureJson)));
-    }
-    RootObject->SetArrayField("Storage", StorageArray);
-
-    // 3. Convert to String
-    FString OutputString;
-    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-    FJsonSerializer::Serialize(RootObject.ToSharedRef(), Writer);
-
-    return OutputString;
-}
-
-bool UCreatureCollectionSubsystem::ImportSaveData(const FString& JsonData)
-{
-    if (JsonData.IsEmpty()) return false;
-
-    TSharedPtr<FJsonObject> RootObject;
-    TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonData);
-
-    if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("ImportSaveData: Failed to parse JSON."));
-        return false;
-    }
-
-    // Clear current data
-    Party.Empty();
-    Storage.Empty();
-
-    // 1. Import Party
-    const TArray<TSharedPtr<FJsonValue>>* PartyArray;
-    if (RootObject->TryGetArrayField("Party", PartyArray))
-    {
-        for (const TSharedPtr<FJsonValue>& Val : *PartyArray)
-        {
-            TSharedPtr<FJsonObject> CreatureObj = Val->AsObject();
-            if (CreatureObj.IsValid())
-            {
-                FCreatureInstance Inst = DeserializeCreatureInstance(CreatureObj);
-                if (Inst.CreatureDefinition)
-                {
-                    // Basic validation, maybe verify MaxPartySize logic here or just force load?
-                    // Typically Load overrides rules, so we just add.
-                    Party.Add(Inst);
-                }
-            }
-        }
-    }
-
-    // 2. Import Storage
-    const TArray<TSharedPtr<FJsonValue>>* StorageArray;
-    if (RootObject->TryGetArrayField("Storage", StorageArray))
-    {
-        for (const TSharedPtr<FJsonValue>& Val : *StorageArray)
-        {
-            TSharedPtr<FJsonObject> CreatureObj = Val->AsObject();
-            if (CreatureObj.IsValid())
-            {
-                FCreatureInstance Inst = DeserializeCreatureInstance(CreatureObj);
-                if (Inst.CreatureDefinition)
-                {
-                    Storage.Add(Inst.CreatureDefinition->SpeciesName, Inst);
-                }
-            }
-        }
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("ImportSaveData: Successfully loaded %d party members and %d storage members."), Party.Num(), Storage.Num());
-    return true;
+    Party = SaveData.Party;
+    Storage = SaveData.Storage;
+    UE_LOG(LogTemp, Log, TEXT("LoadCollectionSaveData: Overwrote collection with %d party members and %d storage members."), Party.Num(), Storage.Num());
 }
